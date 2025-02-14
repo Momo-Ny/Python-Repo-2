@@ -5,58 +5,54 @@ from groq import Groq
 import instructor
 
 
-class Response(BaseModel):
-    answer: str = Field(..., description="The answer to the user's question")
+class Character(BaseModel):
+    name: str
+    fact: List[str] = Field(..., description="A list of facts about the subject")
 
 
-def get_groq_response(question: str) -> str:
+def get_groq_response(question: str) -> Character:
     # Initialize Groq client
     client = Groq(
-        api_key=os.environ.get('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'),
+        api_key=os.environ.get('GROQ_API_KEY'),  # Ensure API key is set
     )
-   
+
     # Enable instructor integration
     client = instructor.from_groq(client, mode=instructor.Mode.TOOLS)
-   
+
     # Make API call
     resp = client.chat.completions.create(
         model="mixtral-8x7b-32768",
-        messages=[
-            {
-                "role": "user",
-                "content": question,
-            }
-        ],
-        response_model=Response,
+        messages=[{"role": "user", "content": question}],
+        response_model=Character,
     )
-    return resp.answer
+    
+    return resp
 
 
 def main():
-    # Check for API key
+    # Check if API key is set
     if not os.environ.get('GROQ_API_KEY'):
-        print("Please set your GROQ_API_KEY environment variable")
+        print("Please set your GROQ_API_KEY environment variable.")
         return
-   
-    print("Welcome to Groq Chat! Type 'quit' to exit.")
-   
-    # Main conversation loop
+
+    print("Welcome! Type the subject that you want to know about or type 'quit' to exit.")
+
     while True:
         # Get user input
         question = input("\nYou: ")
-       
-        # Check for quit command
-        if question.lower() == 'quit':
+
+        # Exit condition
+        if question.lower() == "quit":
             print("Goodbye!")
             break
-           
+
         try:
-            # Get and print response
+            # Get response
             response = get_groq_response(question)
-            print(f"\nGroq: {response}")
+            print(f"\nGroq: {response.model_dump_json(indent=2)}")
         except Exception as e:
             print(f"An error occurred: {str(e)}")
 
 
-if _name_ == "_main_":
+if __name__ == "__main__":
     main()
