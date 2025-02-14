@@ -1,1 +1,5 @@
-
+groq
+instructor
+pydantic
+flask
+requests
